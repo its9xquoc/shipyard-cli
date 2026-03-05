@@ -1,0 +1,6 @@
+/phpunit.xml
+/tests/.shipyard
+/vendor
+composer.lock
+.phpunit.result.cache
+

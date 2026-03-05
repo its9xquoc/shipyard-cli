@@ -1,0 +1,13 @@
+name: fix code styling
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  lint:
+    uses: its9xquoc/shipyard-cli/.github/workflows/coding-standards.yml@main

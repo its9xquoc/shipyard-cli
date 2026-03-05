@@ -1,0 +1,14 @@
+includes:
+  - ./vendor/larastan/larastan/extension.neon
+parameters:
+  paths:
+    - app
+    - bootstrap
+    - config
+    - scripts
+  level: 5
+  ignoreErrors:
+    - '#Unsafe usage of new static\(\)#'
+    - '#does not have argument#'
+  checkMissingIterableValueType: false
+  checkGenericClassInNonGenericObjectType: false

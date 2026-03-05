@@ -1,0 +1,13 @@
+name: update changelog
+
+on:
+  release:
+    types: [released]
+
+permissions: {}
+
+jobs:
+  update:
+    permissions:
+      contents: write
+    uses: its9xquoc/shipyard-cli/.github/workflows/update-changelog.yml@main
