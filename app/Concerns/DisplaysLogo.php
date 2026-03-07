@@ -14,10 +14,10 @@ trait DisplaysLogo
         render(<<<'HTML'
             <div class="py-1">
                 <div class="flex space-x-1 mb-1">
-                    <span class="px-2 bg-blue-600 text-white font-bold">🛳️</span>
-                    <span class="px-2 bg-slate-800 text-blue-400 font-bold underline">SHIPYARD.ENGINE</span>
+                    <span class="px-2 bg-gray-600 text-white font-bold">🛳️</span>
+                    <span class="px-2 bg-slate-800 text-gray-400 font-bold underline">SHIPYARD.ENGINE</span>
                 </div>
-                <div class="text-blue-500 font-bold">
+                <div class="text-green-500 font-bold">
 <pre>
    _____ __    _                             __ 
   / ___// /_  (_)___  __  ______ ___________/ / 
@@ -27,7 +27,7 @@ trait DisplaysLogo
             /_/    /____/                       
 </pre>
                 </div>
-                <div class="flex space-x-2 text-gray-400">
+                <div class="flex space-x-2 text-gray-400 mt-2">
                     <span class="italic">v0.0.1</span>
                     <span class="text-gray-600">|</span>
                     <span>The ultimate VPS & Site Management Suite</span>

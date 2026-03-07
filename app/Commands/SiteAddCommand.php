@@ -71,6 +71,7 @@ class SiteAddCommand extends Command
 
         // 6. Execute Remote Command
         $envVars = collect($config)->merge([
+            'DEPLOY_USER' => $server['deploy_user'] ?? 'deploy',
             'APP_NAME' => $appName,
             'APP_PATH' => $appPath,
             'DOMAIN' => $domain,

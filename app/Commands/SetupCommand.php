@@ -84,7 +84,7 @@ class SetupCommand extends Command
             required: true
         );
 
-        $config = $this->promptForConfiguration($selectedStepKeys);
+        $config = $this->promptForConfiguration($selectedStepKeys, $server);
 
         // Determine which modules are needed
         $neededModules = collect($selectedStepKeys)
@@ -96,7 +96,9 @@ class SetupCommand extends Command
         $fullScript = $this->bundleScripts($neededModules);
 
         // Prepare Environment Variables String
-        $envVars = collect($config)
+        $envVars = collect($config)->merge([
+            'DEPLOY_USER' => $config['NEW_USER'] ?? ($server['deploy_user'] ?? 'deploy'),
+        ])
             ->filter()
             ->map(fn ($value, $key) => "{$key}=" . escapeshellarg((string) $value))
             ->implode(' ');
@@ -191,12 +193,12 @@ class SetupCommand extends Command
     /**
      * Prompt user for environmental configuration.
      */
-    protected function promptForConfiguration(array $selectedStepKeys): array
+    protected function promptForConfiguration(array $selectedStepKeys, array $server): array
     {
         $config = [];
 
         if (in_array('create_user', $selectedStepKeys)) {
-            $config['NEW_USER'] = text('Deployment Username', default: 'deploy', required: true);
+            $config['NEW_USER'] = text('Deployment Username', default: ($server['deploy_user'] ?? 'deploy'), required: true);
             $config['NEW_USER_PASSWORD'] = password('Deployment User Password', placeholder: 'Min 8 characters', required: true);
         }
 

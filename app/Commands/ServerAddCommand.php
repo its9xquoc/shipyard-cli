@@ -6,6 +6,8 @@ use App\Repositories\ServerRepository;
 use Illuminate\Console\Command;
 
 use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\password;
+use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
 
 class ServerAddCommand extends Command
@@ -63,10 +65,37 @@ class ServerAddCommand extends Command
             required: true
         );
 
-        $privateKey = text(
-            label: 'Private Key Path',
-            default: '~/.ssh/id_rsa',
-            required: true
+        $authType = select(
+            label: 'Authentication method',
+            options: [
+                'key' => 'Identity File (Private Key)',
+                'password' => 'Password (Not recommended for production)',
+            ],
+            default: 'key'
+        );
+
+        $privateKey = null;
+        $serverPassword = null;
+
+        if ($authType === 'key') {
+            $privateKey = text(
+                label: 'Private Key Path',
+                default: '~/.ssh/id_rsa',
+                required: true
+            );
+        } else {
+            $serverPassword = password(
+                label: 'SSH Password',
+                placeholder: 'Enter your SSH password',
+                required: true
+            );
+        }
+
+        $deployUser = text(
+            label: 'Deployment User Name',
+            default: $name,
+            required: true,
+            hint: 'This user will be created during setup and used for web app deployment.'
         );
 
         if (confirm('Do you want to save this server?')) {
@@ -75,7 +104,10 @@ class ServerAddCommand extends Command
                 'host' => $host,
                 'port' => (int) $port,
                 'user' => $user,
+                'auth_type' => $authType,
                 'private_key' => $privateKey,
+                'password' => $serverPassword,
+                'deploy_user' => $deployUser,
             ]);
 
             $this->info('Server added successfully.');
