@@ -49,16 +49,6 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "bin": [
-        "shipyard"
-    ],
-    "scripts": {
-        "post-install-cmd": [
-            "chmod +x install.sh",
-            "./install.sh"
-        ],
-        "post-update-cmd": [
-            "chmod +x install.sh",
-            "./install.sh"
-        ]
-    }
+        "builds/shipyard"
+    ]
 }

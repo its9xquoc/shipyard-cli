@@ -26,13 +26,20 @@ Built on top of **Laravel Zero**, it brings the power of Artisan commands to ser
 
 ## 📦 Installation
 
+### 1. Local Setup
 ```bash
 git clone https://github.com/its9xquoc/shipyard-cli.git
 cd shipyard-cli
 composer install
 ```
 
-Make sure you have a `storage/servers.yaml` file (automatically created on first run) to store your server configurations locally.
+### 2. Global Installation (Optional)
+To use the `shipyard` command from anywhere, run our installer script:
+```bash
+chmod +x install.sh
+./install.sh
+```
+This will create a dynamic symbolic link in `/usr/local/bin/shipyard` pointing to your project directory.
 
 ---
 
