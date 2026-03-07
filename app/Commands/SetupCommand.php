@@ -2,6 +2,7 @@
 
 namespace App\Commands;
 
+use App\Concerns\DisplaysLogo;
 use App\Concerns\InteractsWithServers;
 use App\Concerns\InteractsWithSSH;
 use App\Repositories\ServerRepository;
@@ -16,7 +17,7 @@ use function Laravel\Prompts\text;
 
 class SetupCommand extends Command
 {
-    use InteractsWithServers, InteractsWithSSH;
+    use DisplaysLogo, InteractsWithServers, InteractsWithSSH;
 
     /**
      * The name and signature of the console command.
@@ -71,6 +72,7 @@ class SetupCommand extends Command
      */
     public function handle(): int
     {
+        $this->displayLogo();
         $server = $this->chooseServer();
 
         $options = collect($this->stepDefinitions)->mapWithKeys(fn ($item, $key) => [$key => $item['label']])->toArray();

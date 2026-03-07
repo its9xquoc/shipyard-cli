@@ -2,6 +2,7 @@
 
 namespace App\Commands;
 
+use App\Concerns\DisplaysLogo;
 use App\Concerns\InteractsWithServers;
 use App\Concerns\InteractsWithSSH;
 use App\Repositories\ServerRepository;
@@ -16,7 +17,7 @@ use function Laravel\Prompts\text;
 
 class SiteAddCommand extends Command
 {
-    use InteractsWithServers, InteractsWithSSH;
+    use DisplaysLogo, InteractsWithServers, InteractsWithSSH;
 
     protected $signature = 'site:add';
 
@@ -31,6 +32,7 @@ class SiteAddCommand extends Command
 
     public function handle(): int
     {
+        $this->displayLogo();
         $server = $this->chooseServer();
 
         // 1. Choose Site Type
