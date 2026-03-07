@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'storage_path' => storage_path('servers.yaml'),
+    'storage_path' => env('HOME') . '/.shipyard/servers.yaml',
 ];

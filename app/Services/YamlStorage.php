@@ -23,6 +23,12 @@ class YamlStorage
      */
     public function write(string $path, array $data): void
     {
+        $directory = dirname($path);
+
+        if (!is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
         $yaml = Yaml::dump($data, 4, 2);
         file_put_contents($path, $yaml);
     }
