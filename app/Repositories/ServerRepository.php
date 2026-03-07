@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Services;
+namespace App\Repositories;
 
+use App\Services\YamlStorage;
 use Illuminate\Support\Collection;
 
 class ServerRepository
@@ -62,10 +63,60 @@ class ServerRepository
     }
 
     /**
+     * Get the ID of the currently active server.
+     */
+    public function getActiveServerId(): ?int
+    {
+        $data = $this->storage->read($this->path);
+
+        return $data['active_server_id'] ?? null;
+    }
+
+    /**
+     * Set the ID of the currently active server.
+     */
+    public function setActiveServerId(int $id): void
+    {
+        $servers = $this->getAllServers();
+        $this->save($servers, $id);
+    }
+
+    /**
+     * Get the API token.
+     */
+    public function getApiToken(): ?string
+    {
+        $data = $this->storage->read($this->path);
+
+        return $data['api_token'] ?? null;
+    }
+
+    /**
+     * Set the API token.
+     */
+    public function setApiToken(string $token): void
+    {
+        $servers = $this->getAllServers();
+        $this->save($servers, null, $token);
+    }
+
+    /**
      * Save servers to storage.
      */
-    protected function save(Collection $servers): void
+    protected function save(Collection $servers, ?int $activeServerId = null, ?string $apiToken = null): void
     {
-        $this->storage->write($this->path, ['servers' => $servers->toArray()]);
+        if ($activeServerId === null) {
+            $activeServerId = $this->getActiveServerId();
+        }
+
+        if ($apiToken === null) {
+            $apiToken = $this->getApiToken();
+        }
+
+        $this->storage->write($this->path, [
+            'active_server_id' => $activeServerId,
+            'api_token' => $apiToken,
+            'servers' => $servers->toArray(),
+        ]);
     }
 }

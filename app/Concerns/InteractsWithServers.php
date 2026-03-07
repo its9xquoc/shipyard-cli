@@ -28,12 +28,21 @@ trait InteractsWithServers
             exit(1);
         }
 
+        // Try to get active server first
+        $activeId = $this->repository->getActiveServerId();
+        if ($activeId) {
+            $activeServer = $servers->firstWhere('id', $activeId);
+            if ($activeServer) {
+                return (array) $activeServer;
+            }
+        }
+
         $id = select(
             label: 'Choose a server',
             options: $servers->pluck('name', 'id')->toArray()
         );
 
-        return $servers->firstWhere('id', (int) $id);
+        return (array) $servers->firstWhere('id', (int) $id);
     }
 
     /**

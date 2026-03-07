@@ -4,7 +4,7 @@ namespace App\Commands;
 
 use App\Concerns\InteractsWithServers;
 use App\Concerns\InteractsWithSSH;
-use App\Services\ServerRepository;
+use App\Repositories\ServerRepository;
 use App\Services\SSHService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;

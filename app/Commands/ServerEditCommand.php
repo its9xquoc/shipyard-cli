@@ -3,7 +3,7 @@
 namespace App\Commands;
 
 use App\Concerns\InteractsWithServers;
-use App\Services\ServerRepository;
+use App\Repositories\ServerRepository;
 use Illuminate\Console\Command;
 
 use function Laravel\Prompts\text;
