@@ -128,6 +128,27 @@ class SetupCommand extends Command
         }
 
         if ($exitCode === 0) {
+            // Update server configuration in storage if it was changed
+            $updatedData = [];
+            if (isset($config['NEW_USER'])) {
+                $updatedData['user'] = $config['NEW_USER'];
+            }
+            if (isset($config['SSH_PORT'])) {
+                $updatedData['port'] = (int) $config['SSH_PORT'];
+            }
+
+            if (!empty($config['DB_ROOT_PASS'])) {
+                $updatedData['db_root_pass'] = $config['DB_ROOT_PASS'];
+            }
+            if (!empty($config['PHP_VERSION'])) {
+                $updatedData['php_version'] = $config['PHP_VERSION'];
+            }
+
+            if (!empty($updatedData)) {
+                $this->repository->updateServer($server['id'], $updatedData);
+                $this->components->info('Server configuration updated in storage.');
+            }
+
             $this->newLine();
             $this->components->success('Modular VPS Setup completed successfully!');
 
@@ -194,6 +215,7 @@ class SetupCommand extends Command
             $config['DB_NAME'] = text('Database Name', default: 'app_db', required: true);
             $config['DB_USER'] = text('Database User', default: 'app_user', required: true);
             $config['DB_PASS'] = password('Database Password', required: true);
+            $config['DB_ROOT_PASS'] = password('MariaDB Root Password', required: true);
         }
 
         if (in_array('install_nodejs', $selectedStepKeys)) {
