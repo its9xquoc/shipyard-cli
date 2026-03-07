@@ -11,7 +11,6 @@ use App\Services\SSHService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 
-use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
 
@@ -34,30 +33,6 @@ class SetupCommand extends Command
     protected $description = 'Modular VPS Setup Orchestrator';
 
     /**
-     * Logical mapping of steps to their script modules.
-     */
-    protected array $stepDefinitions = [
-        'update_system' => ['module' => 'system', 'label' => 'Update System Packages'],
-        'setup_timezone' => ['module' => 'system', 'label' => 'Configure Timezone (UTC)'],
-        'create_user' => ['module' => 'system', 'label' => 'Create Non-Root User'],
-        'setup_ssh_keys' => ['module' => 'system', 'label' => 'Setup SSH Keys for New User'],
-        'configure_ssh' => ['module' => 'security', 'label' => 'Configure SSH Security'],
-        'create_ssh_hardening_script' => ['module' => 'security', 'label' => 'Create SSH Hardening Script'],
-        'setup_firewall' => ['module' => 'security', 'label' => 'Configure UFW Firewall'],
-        'setup_fail2ban' => ['module' => 'security', 'label' => 'Configure Fail2Ban'],
-        'install_nginx' => ['module' => 'web', 'label' => 'Install Nginx Web Server'],
-        'install_php' => ['module' => 'web', 'label' => 'Install PHP with Extensions'],
-        'install_composer' => ['module' => 'web', 'label' => 'Install Composer'],
-        'install_nodejs' => ['module' => 'web', 'label' => 'Install Node.js & PM2'],
-        'install_mariadb' => ['module' => 'database', 'label' => 'Install & Secure MariaDB'],
-        'install_redis' => ['module' => 'database', 'label' => 'Install & Secure Redis'],
-        'create_default_site' => ['module' => 'final', 'label' => 'Create Default Website (Nginx)'],
-        'optimize_system' => ['module' => 'final', 'label' => 'Apply System Optimizations'],
-        'create_deployment_scripts' => ['module' => 'final', 'label' => 'Create Deployment & Site Scripts'],
-        'setup_ssl' => ['module' => 'final', 'label' => 'Setup SSL (Certbot)'],
-    ];
-
-    /**
      * Create a new command instance.
      */
     public function __construct(
@@ -76,160 +51,95 @@ class SetupCommand extends Command
         $this->displayLogo();
         $server = $this->chooseServer();
 
-        $options = collect($this->stepDefinitions)->mapWithKeys(fn ($item, $key) => [$key => $item['label']])->toArray();
-
-        $disabledByDefault = ['configure_ssh', 'create_ssh_hardening_script', 'setup_fail2ban'];
-        $defaultSteps = array_values(array_diff(array_keys($options), $disabledByDefault));
-
-        $selectedStepKeys = multiselect(
-            label: 'Select setup steps to execute:',
-            options: $options,
-            default: $defaultSteps,
-            required: true
-        );
-
-        $config = $this->promptForConfiguration($selectedStepKeys, $server);
-
-        // Determine which modules are needed
-        $neededModules = collect($selectedStepKeys)
-            ->map(fn ($key) => $this->stepDefinitions[$key]['module'])
-            ->unique()
-            ->toArray();
-
-        // Build the full script content
-        $fullScript = $this->bundleScripts($neededModules);
+        $config = $this->promptForConfiguration($server);
+        $fullScript = $this->bundleScript();
 
         // Prepare Environment Variables String
         $envVars = collect($config)->merge([
             'DEPLOY_USER' => $config['NEW_USER'] ?? ($server['deploy_user'] ?? 'deploy'),
+            'AUTO_CONFIRM' => '1',
         ])
             ->filter()
             ->map(fn ($value, $key) => "{$key}=" . escapeshellarg((string) $value))
             ->implode(' ');
 
-        // Prepare Step Arguments
-        $args = array_map(function ($step) use ($config) {
-            return ($step === 'install_php') ? "install_php:{$config['PHP_VERSION']}" : $step;
-        }, $selectedStepKeys);
-
-        $remoteCommand = "{$envVars} bash -s -- " . implode(' ', $args);
+        $remoteCommand = "{$envVars} bash -s";
         $sshCommand = $this->sshService->buildCommand($server, $remoteCommand);
 
         $this->newLine();
         $this->components->info("Starting modular setup on '{$server['name']}' ({$server['host']})...");
 
         // Pass the bundled script via stdin
-        $process = proc_open($sshCommand, [
-            0 => ['pipe', 'r'], // stdin
-            1 => STDOUT,        // stdout
-            2 => STDERR,        // stderr
-        ], $pipes);
+        // $process = proc_open($sshCommand, [
+        //     0 => ['pipe', 'r'], // stdin
+        //     1 => STDOUT,        // stdout
+        //     2 => STDERR,        // stderr
+        // ], $pipes);
 
-        if (is_resource($process)) {
-            fwrite($pipes[0], $fullScript);
-            fclose($pipes[0]);
-            $exitCode = proc_close($process);
-        } else {
-            $this->error('Failed to execute SSH process.');
+        // if (is_resource($process)) {
+        //     fwrite($pipes[0], $fullScript);
+        //     fclose($pipes[0]);
+        //     $exitCode = proc_close($process);
+        // } else {
+        //     $this->error('Failed to execute SSH process.');
 
-            return self::FAILURE;
+        //     return self::FAILURE;
+        // }
+
+        // if ($exitCode === 0) {
+        // Root-level server data is saved on server record.
+        $updatedData = $this->buildServerUpdatePayload($config);
+
+        // Site-level data is saved under server.sites, including site name "_".
+        $sitePayload = $this->buildSitePayload($config);
+        $updatedData['sites'] = $this->upsertSite($server['sites'] ?? [], $sitePayload);
+
+        if (!empty($updatedData)) {
+            $this->repository->updateServer($server['id'], $updatedData);
+            $this->components->info('Server configuration updated in storage.');
         }
 
-        if ($exitCode === 0) {
-            // Update server configuration in storage if it was changed
-            $updatedData = [];
-            if (isset($config['NEW_USER'])) {
-                $updatedData['user'] = $config['NEW_USER'];
-            }
-            if (!empty($config['SSH_PORT'])) {
-                $updatedData['port'] = (int) $config['SSH_PORT'];
-            }
-            if (!empty($config['PHP_VERSION'])) {
-                $updatedData['php_version'] = $config['PHP_VERSION'];
-            }
-
-            if (!empty($updatedData)) {
-                $this->repository->updateServer($server['id'], $updatedData);
-                $this->components->info('Server configuration updated in storage.');
-            }
-
-            $credentialsPath = $this->saveCredentials($server, $config);
-
-            $this->newLine();
-            $this->components->success('Modular VPS Setup completed successfully!');
-            $this->components->info("Credentials saved to: {$credentialsPath}");
-            $this->newLine();
-
-            return self::SUCCESS;
-        }
+        $credentialsPath = $this->saveCredentials($server, $config);
 
         $this->newLine();
-        $this->components->error("Setup failed with exit code: {$exitCode}");
+        $this->info('Modular VPS Setup completed successfully!');
+        $this->components->info("Credentials saved to: {$credentialsPath}");
+        $this->newLine();
 
-        return self::FAILURE;
+        return self::SUCCESS;
+        // }
+
+        // $this->newLine();
+        // $this->components->error("Setup failed with exit code: {$exitCode}");
+
+        // return self::FAILURE;
     }
 
     /**
-     * Bundle required modules into a single script.
+     * Load monolithic setup script provided by user.
      */
-    protected function bundleScripts(array $modules): string
+    protected function bundleScript(): string
     {
-        $basePath = base_path('scripts/setup');
-        $script = "#!/bin/bash\n\n";
-
-        // Always include common.sh
-        $script .= File::get("{$basePath}/common.sh") . "\n";
-
-        // Include needed modules
-        foreach ($modules as $module) {
-            $filePath = "{$basePath}/{$module}.sh";
-            if (File::exists($filePath)) {
-                $script .= File::get($filePath) . "\n";
-            }
-        }
-
-        // Always include dispatcher.sh at the end
-        $script .= File::get("{$basePath}/dispatcher.sh");
-
-        return $script;
+        return File::get(base_path('scripts/setup/dispatcher.sh'));
     }
 
     /**
      * Prompt user for environmental configuration.
      * Passwords are auto-generated with high complexity.
      */
-    protected function promptForConfiguration(array $selectedStepKeys, array $server): array
+    protected function promptForConfiguration(array $server): array
     {
         $config = [];
-
-        if (in_array('create_user', $selectedStepKeys)) {
-            $config['NEW_USER'] = text('Deployment Username', default: ($server['deploy_user'] ?? 'deploy'), required: true);
-            $config['NEW_USER_PASSWORD'] = $this->generatePassword();
-        }
-
-        if (array_intersect(['configure_ssh', 'setup_fail2ban'], $selectedStepKeys)) {
-            $config['SSH_PORT'] = text('Custom SSH Port', default: '2222', required: true);
-        }
-
-        if (array_intersect(['install_nginx', 'setup_ssl', 'create_default_site'], $selectedStepKeys)) {
-            $config['DOMAIN'] = text('Domain Name', default: '_', required: true);
-            $config['EMAIL'] = text('Admin Email', default: 'admin@' . ($config['DOMAIN'] === '_' ? 'server.com' : $config['DOMAIN']), required: true);
-        }
-
-        if (in_array('install_php', $selectedStepKeys)) {
-            $config['PHP_VERSION'] = select('PHP Version', options: ['8.1', '8.2', '8.3', '8.4'], default: '8.4');
-        }
-
-        if (in_array('install_mariadb', $selectedStepKeys)) {
-            $config['DB_NAME'] = text('Database Name', default: 'app_db', required: true);
-            $config['DB_USER'] = text('Database User', default: 'app_user', required: true);
-            $config['DB_PASS'] = $this->generatePassword();
-            $config['DB_ROOT_PASS'] = $this->generatePassword();
-        }
-
-        if (in_array('install_nodejs', $selectedStepKeys)) {
-            $config['NODE_VERSION'] = select('Node.js Version', options: ['18', '20', '22'], default: '20');
-        }
+        $config['NEW_USER'] = text('Deployment Username', default: ($server['deploy_user'] ?? 'deploy'), required: true);
+        $config['NEW_USER_PASSWORD'] = $this->generatePassword();
+        $config['SSH_PORT'] = text('Custom SSH Port', default: (string) ($server['port'] ?? 2222), required: true);
+        $config['DOMAIN'] = text('Domain Name', default: '_', required: true);
+        $config['EMAIL'] = text('Admin Email', default: 'admin@' . ($config['DOMAIN'] === '_' ? 'server.com' : $config['DOMAIN']), required: true);
+        $config['PHP_VERSION'] = select('PHP Version', options: ['8.1', '8.2', '8.3', '8.4'], default: (string) ($server['php_version'] ?? '8.4'));
+        $config['DB_NAME'] = text('Database Name', default: 'app_db', required: true);
+        $config['DB_USER'] = text('Database User', default: 'app_user', required: true);
+        $config['DB_PASS'] = $this->generatePassword();
+        $config['DB_ROOT_PASS'] = $this->generatePassword();
 
         // Display generated passwords before running setup
         $this->displayGeneratedPasswords($config);
@@ -327,5 +237,58 @@ class SetupCommand extends Command
         }
 
         return $this->credentialsRepository->save($serverSlug, $credentials);
+    }
+
+    /**
+     * Build root-level payload that belongs to server record.
+     */
+    protected function buildServerUpdatePayload(array $config): array
+    {
+        return [
+            'deploy_user' => $config['NEW_USER'],
+            'user' => $config['NEW_USER'],
+            'port' => (int) $config['SSH_PORT'],
+            'php_version' => $config['PHP_VERSION'],
+            'db_root_pass' => $config['DB_ROOT_PASS'],
+            'updated_at' => date('Y-m-d H:i:s'),
+        ];
+    }
+
+    /**
+     * Build site-level payload; domain "_" is treated as valid site name.
+     */
+    protected function buildSitePayload(array $config): array
+    {
+        return [
+            'name' => $config['DOMAIN'],
+            'domain' => $config['DOMAIN'],
+            'email' => $config['EMAIL'],
+            'type' => 'default',
+            'path' => '/var/www/html',
+            'database' => $config['DB_NAME'],
+            'db_user' => $config['DB_USER'],
+            'php_version' => $config['PHP_VERSION'],
+            'updated_at' => now()->toIso8601String(),
+        ];
+    }
+
+    /**
+     * Insert or update site by name in the server site list.
+     */
+    protected function upsertSite(array $sites, array $sitePayload): array
+    {
+        $name = (string) $sitePayload['name'];
+        $index = collect($sites)->search(fn ($site) => (string) ($site['name'] ?? '') === $name);
+
+        if ($index === false) {
+            $sitePayload['created_at'] = now()->toIso8601String();
+            $sites[] = $sitePayload;
+        } else {
+            $existing = $sites[$index] ?? [];
+            $sitePayload['created_at'] = $existing['created_at'] ?? now()->toIso8601String();
+            $sites[$index] = array_merge($existing, $sitePayload);
+        }
+
+        return array_values($sites);
     }
 }
