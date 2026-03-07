@@ -11,7 +11,7 @@ class YamlStorage
      */
     public function read(string $path): array
     {
-        if (! file_exists($path)) {
+        if (!file_exists($path)) {
             return [];
         }
 

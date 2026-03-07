@@ -5,8 +5,8 @@ namespace App\Commands;
 use App\Services\ServerRepository;
 use Illuminate\Console\Command;
 
-use function Laravel\Prompts\text;
 use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\text;
 
 class ServerAddCommand extends Command
 {

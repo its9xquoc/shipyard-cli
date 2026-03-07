@@ -3,9 +3,9 @@
 use App\Clients\Shipyard;
 use App\Commands\Command;
 use App\Repositories\ConfigRepository;
-use App\Repositories\ShipyardRepository;
 use App\Repositories\KeyRepository;
 use App\Repositories\RemoteRepository;
+use App\Repositories\ShipyardRepository;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\File;
 use LaravelZero\Framework\Testing\TestCase;

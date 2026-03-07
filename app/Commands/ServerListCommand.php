@@ -42,6 +42,7 @@ class ServerListCommand extends Command
 
         if ($servers->isEmpty()) {
             $this->info('No servers configured.');
+
             return self::SUCCESS;
         }
 

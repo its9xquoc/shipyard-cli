@@ -2,10 +2,10 @@
 
 namespace App\Commands;
 
-use App\Concerns\InteractsWithSSH;
 use App\Concerns\InteractsWithServers;
-use App\Services\SSHService;
+use App\Concerns\InteractsWithSSH;
 use App\Services\ServerRepository;
+use App\Services\SSHService;
 use Illuminate\Console\Command;
 
 class SSHTestCommand extends Command
