@@ -21,7 +21,7 @@ class StorageClearCommand extends Command
 
     public function handle(): int
     {
-        $path = config('vps-manager.storage_path');
+        $path = config('shipyard.storage_path');
 
         if (!file_exists($path)) {
             $this->info('No storage file found. Nothing to clear.');

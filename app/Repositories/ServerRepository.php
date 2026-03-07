@@ -12,7 +12,7 @@ class ServerRepository
     public function __construct(
         protected YamlStorage $storage
     ) {
-        $this->path = config('vps-manager.storage_path');
+        $this->path = config('shipyard.storage_path');
     }
 
     /**
