@@ -10,6 +10,7 @@ Shipyard CLI is a powerful command-line tool that allows you to manage your VPS 
 - [Deployments](#deployments)
 - [Resource Control](#resource-control)
 - [SSH Utilities](#ssh-utilities)
+- [Maintenance & Safety](#maintenance-safety)
 
 ---
 
@@ -180,3 +181,14 @@ shipyard command --command="shipyard inspire"
 ```bash
 shipyard tinker
 ```
+
+---
+
+## Maintenance & Safety
+
+### Clear Local Storage
+If you want to reset the Shipyard CLI and delete all local server/token data:
+```bash
+shipyard storage:clear
+```
+*Note: This only affects your local configuration file at `~/.shipyard/servers.yaml`.*
