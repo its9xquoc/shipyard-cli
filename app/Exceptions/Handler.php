@@ -2,7 +2,6 @@
 
 namespace App\Exceptions;
 
-use App\Support\Panic;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use LaravelZero\Framework\Exceptions\ConsoleException;
 use Throwable;
@@ -26,10 +25,6 @@ class Handler extends ExceptionHandler
     public function register()
     {
         $this->reportable(function (Throwable $e) {
-            if (app()->isProduction()) {
-                Panic::abort($e);
-            }
-
             return true;
         });
     }
