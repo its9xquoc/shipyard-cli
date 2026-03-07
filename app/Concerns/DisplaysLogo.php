@@ -28,7 +28,7 @@ trait DisplaysLogo
 </pre>
                 </div>
                 <div class="flex space-x-2 text-gray-400">
-                    <span class="italic">v1.8.3</span>
+                    <span class="italic">v0.0.1</span>
                     <span class="text-gray-600">|</span>
                     <span>The ultimate VPS & Site Management Suite</span>
                 </div>
