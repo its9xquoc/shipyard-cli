@@ -13,20 +13,24 @@ trait DisplaysLogo
     {
         render(<<<'HTML'
             <div class="py-1">
-                <div class="px-2 bg-blue-600 text-white font-bold">
-                    🛳️ SHIPYARD CLI 
+                <div class="flex space-x-1 mb-1">
+                    <span class="px-2 bg-blue-600 text-white font-bold">🛳️</span>
+                    <span class="px-2 bg-slate-800 text-blue-400 font-bold underline">SHIPYARD.ENGINE</span>
                 </div>
-                <div class="text-blue-400 font-bold">
+                <div class="text-blue-500 font-bold">
 <pre>
-   _____ __  _____________  _____    ____  ____ 
-  / ___// / / /  _/ __ \ \/ /   |  / __ \/ __ \
-  \__ \/ /_/ // // /_/ /\  / /| | / /_/ / / / / 
- ___/ / __  // // ____/ / / ___ |/ _, _/ /_/ /  
-/____/_/ /_/___/_/     /_/_/  |_/_/ |_|/_____/  
+   _____ __    _                             __ 
+  / ___// /_  (_)___  __  ______ ___________/ / 
+  \__ \/ __ \/ / __ \/ / / / __ `/ ___/ __  /  
+ ___/ / / / / / /_/ / /_/ / /_/ / /  / /_/ /   
+/____/_/ /_/_/ .___/\__, /\__,_/_/   \__,_/    
+            /_/    /____/                       
 </pre>
                 </div>
-                <div class="text-gray-500 italic">
-                    The ultimate VPS & Site Management Suite
+                <div class="flex space-x-2 text-gray-400">
+                    <span class="italic">v1.8.3</span>
+                    <span class="text-gray-600">|</span>
+                    <span>The ultimate VPS & Site Management Suite</span>
                 </div>
             </div>
 HTML

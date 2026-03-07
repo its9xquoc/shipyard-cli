@@ -98,7 +98,7 @@ class SetupCommand extends Command
         // Prepare Environment Variables String
         $envVars = collect($config)
             ->filter()
-            ->map(fn ($value, $key) => "{$key}=" . escapeshellarg($value))
+            ->map(fn ($value, $key) => "{$key}=" . escapeshellarg((string) $value))
             ->implode(' ');
 
         // Prepare Step Arguments
