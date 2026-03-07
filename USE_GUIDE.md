@@ -32,25 +32,25 @@ Shipyard CLI tracks your "active" server. Once switched, most commands will auto
 
 ### List Servers
 ```bash
-php artisan server:list
+shipyard server:list
 ```
 
 ### Add a Server
 ```bash
-php artisan server:add
+shipyard server:add
 ```
 
 ### Switch/Active Server
 View the current active server:
 ```bash
-php artisan server:current
+shipyard server:current
 ```
 
 Switch to another server:
 ```bash
-php artisan server:switch
+shipyard server:switch
 # or
-php artisan server:switch server-name
+shipyard server:switch server-name
 ```
 
 ---
@@ -60,7 +60,7 @@ php artisan server:switch server-name
 The `setup` command transforms a fresh Ubuntu server into a fully-functional web server.
 
 ```bash
-php artisan setup
+shipyard setup
 ```
 
 **Available Steps:**
@@ -78,26 +78,26 @@ php artisan setup
 Supports **Laravel**, **WordPress**, **Node.js/Next.js**, and **Static** sites. Each site is isolated using separate PHP-FPM pools or PM2 processes.
 
 ```bash
-php artisan site:add
+shipyard site:add
 ```
 
 ### Listing Sites
 Lists all websites on the active (or selected) server.
 ```bash
-php artisan site:list
+shipyard site:list
 ```
 
 ### Deleting a Site
 Removes Nginx configs, PHP pools, and PM2 processes while keeping data/databases safe.
 ```bash
-php artisan site:delete
+shipyard site:delete
 ```
 
 ### Site Logs
 View application or web server logs:
 ```bash
-php artisan site:logs
-php artisan site:logs --follow
+shipyard site:logs
+shipyard site:logs --follow
 ```
 
 ---
@@ -107,12 +107,12 @@ php artisan site:logs --follow
 ### Initiate Deployment
 Runs the `deploy.sh` script located in the site's root directory.
 ```bash
-php artisan deploy
+shipyard deploy
 ```
 
 ### Review Deployment Logs
 ```bash
-php artisan deploy:logs
+shipyard deploy:logs
 ```
 
 ---
@@ -123,30 +123,30 @@ Manage server services directly from the CLI.
 
 ### Nginx
 ```bash
-php artisan nginx:status
-php artisan nginx:restart
-php artisan nginx:logs
+shipyard nginx:status
+shipyard nginx:restart
+shipyard nginx:logs
 ```
 
 ### PHP-FPM
 ```bash
-php artisan php:status
-php artisan php:restart
-php artisan php:logs
+shipyard php:status
+shipyard php:restart
+shipyard php:logs
 ```
 
 ### Database (MariaDB/MySQL)
 ```bash
-php artisan database:status
-php artisan database:restart
-php artisan database:shell
+shipyard database:status
+shipyard database:restart
+shipyard database:shell
 ```
 
 ### Daemons (PM2)
 ```bash
-php artisan daemon:status
-php artisan daemon:restart
-php artisan daemon:logs
+shipyard daemon:status
+shipyard daemon:restart
+shipyard daemon:logs
 ```
 
 ---
@@ -156,27 +156,27 @@ php artisan daemon:logs
 ### Interactive Shell
 Open a standard SSH session to the active server:
 ```bash
-php artisan ssh
+shipyard ssh
 ```
 
 ### Test Connection
 ```bash
-php artisan ssh:test
+shipyard ssh:test
 ```
 
 ### Configure SSH Keys
 Automatically adds your local public key to the remote server's `authorized_keys`.
 ```bash
-php artisan ssh:configure --key=~/.ssh/id_rsa.pub
+shipyard ssh:configure --key=~/.ssh/id_rsa.pub
 ```
 
 ### Run Arbitrary Commands
 Execute a command in the root or a specific site directory:
 ```bash
-php artisan command --command="php artisan inspire"
+shipyard command --command="shipyard inspire"
 ```
 
 ### Remote Tinker (Laravel only)
 ```bash
-php artisan tinker
+shipyard tinker
 ```
