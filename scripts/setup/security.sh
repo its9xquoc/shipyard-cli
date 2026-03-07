@@ -187,9 +187,8 @@ setup_firewall() {
     ufw default deny incoming
     ufw default allow outgoing
     
-    log_info "Allowing SSH ports..."
-    ufw allow 22/tcp comment 'SSH - Temporary'
-    ufw allow "$SSH_PORT/tcp" comment 'SSH - Custom Port'
+    log_info "Allowing SSH port..."
+    ufw allow 22/tcp comment 'SSH'
     
     log_info "Allowing HTTP/HTTPS..."
     ufw allow 80/tcp comment 'HTTP'

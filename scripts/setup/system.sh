@@ -50,10 +50,7 @@ create_user() {
     
     echo "$NEW_USER:$NEW_USER_PASSWORD" | chpasswd
     
-    # Force password change on first login
-    chage -d 0 "$NEW_USER"
-    
-    log_success "User $NEW_USER created with temporary password"
+    log_success "User $NEW_USER created successfully"
 }
 
 setup_ssh_keys() {

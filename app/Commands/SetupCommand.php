@@ -5,13 +5,13 @@ namespace App\Commands;
 use App\Concerns\DisplaysLogo;
 use App\Concerns\InteractsWithServers;
 use App\Concerns\InteractsWithSSH;
+use App\Repositories\CredentialsRepository;
 use App\Repositories\ServerRepository;
 use App\Services\SSHService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 
 use function Laravel\Prompts\multiselect;
-use function Laravel\Prompts\password;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
 
@@ -62,6 +62,7 @@ class SetupCommand extends Command
      */
     public function __construct(
         protected ServerRepository $repository,
+        protected CredentialsRepository $credentialsRepository,
         protected SSHService $sshService
     ) {
         parent::__construct();
@@ -77,10 +78,13 @@ class SetupCommand extends Command
 
         $options = collect($this->stepDefinitions)->mapWithKeys(fn ($item, $key) => [$key => $item['label']])->toArray();
 
+        $disabledByDefault = ['configure_ssh', 'create_ssh_hardening_script', 'setup_fail2ban'];
+        $defaultSteps = array_values(array_diff(array_keys($options), $disabledByDefault));
+
         $selectedStepKeys = multiselect(
             label: 'Select setup steps to execute:',
             options: $options,
-            default: array_keys($options),
+            default: $defaultSteps,
             required: true
         );
 
@@ -137,12 +141,8 @@ class SetupCommand extends Command
             if (isset($config['NEW_USER'])) {
                 $updatedData['user'] = $config['NEW_USER'];
             }
-            if (isset($config['SSH_PORT'])) {
+            if (!empty($config['SSH_PORT'])) {
                 $updatedData['port'] = (int) $config['SSH_PORT'];
-            }
-
-            if (!empty($config['DB_ROOT_PASS'])) {
-                $updatedData['db_root_pass'] = $config['DB_ROOT_PASS'];
             }
             if (!empty($config['PHP_VERSION'])) {
                 $updatedData['php_version'] = $config['PHP_VERSION'];
@@ -153,8 +153,12 @@ class SetupCommand extends Command
                 $this->components->info('Server configuration updated in storage.');
             }
 
+            $credentialsPath = $this->saveCredentials($server, $config);
+
             $this->newLine();
             $this->components->success('Modular VPS Setup completed successfully!');
+            $this->components->info("Credentials saved to: {$credentialsPath}");
+            $this->newLine();
 
             return self::SUCCESS;
         }
@@ -192,6 +196,7 @@ class SetupCommand extends Command
 
     /**
      * Prompt user for environmental configuration.
+     * Passwords are auto-generated with high complexity.
      */
     protected function promptForConfiguration(array $selectedStepKeys, array $server): array
     {
@@ -199,7 +204,7 @@ class SetupCommand extends Command
 
         if (in_array('create_user', $selectedStepKeys)) {
             $config['NEW_USER'] = text('Deployment Username', default: ($server['deploy_user'] ?? 'deploy'), required: true);
-            $config['NEW_USER_PASSWORD'] = password('Deployment User Password', placeholder: 'Min 8 characters', required: true);
+            $config['NEW_USER_PASSWORD'] = $this->generatePassword();
         }
 
         if (array_intersect(['configure_ssh', 'setup_fail2ban'], $selectedStepKeys)) {
@@ -218,14 +223,109 @@ class SetupCommand extends Command
         if (in_array('install_mariadb', $selectedStepKeys)) {
             $config['DB_NAME'] = text('Database Name', default: 'app_db', required: true);
             $config['DB_USER'] = text('Database User', default: 'app_user', required: true);
-            $config['DB_PASS'] = password('Database Password', required: true);
-            $config['DB_ROOT_PASS'] = password('MariaDB Root Password', required: true);
+            $config['DB_PASS'] = $this->generatePassword();
+            $config['DB_ROOT_PASS'] = $this->generatePassword();
         }
 
         if (in_array('install_nodejs', $selectedStepKeys)) {
             $config['NODE_VERSION'] = select('Node.js Version', options: ['18', '20', '22'], default: '20');
         }
 
+        // Display generated passwords before running setup
+        $this->displayGeneratedPasswords($config);
+
         return $config;
+    }
+
+    /**
+     * Generate a high-complexity random password.
+     */
+    protected function generatePassword(int $length = 24): string
+    {
+        $uppercase = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+        $lowercase = 'abcdefghjkmnpqrstuvwxyz';
+        $numbers = '23456789';
+        $symbols = '!@#$%^&*-_+=';
+        $all = $uppercase . $lowercase . $numbers . $symbols;
+
+        // Guarantee at least one character from each category
+        $password = [
+            $uppercase[random_int(0, strlen($uppercase) - 1)],
+            $lowercase[random_int(0, strlen($lowercase) - 1)],
+            $numbers[random_int(0, strlen($numbers) - 1)],
+            $symbols[random_int(0, strlen($symbols) - 1)],
+        ];
+
+        for ($i = 4; $i < $length; $i++) {
+            $password[] = $all[random_int(0, strlen($all) - 1)];
+        }
+
+        shuffle($password);
+
+        return implode('', $password);
+    }
+
+    /**
+     * Display all auto-generated passwords to the user.
+     */
+    protected function displayGeneratedPasswords(array $config): void
+    {
+        $rows = [];
+
+        if (isset($config['NEW_USER_PASSWORD'])) {
+            $rows[] = ['Deploy User Password', $config['NEW_USER_PASSWORD']];
+        }
+        if (isset($config['DB_PASS'])) {
+            $rows[] = ['Database Password', $config['DB_PASS']];
+        }
+        if (isset($config['DB_ROOT_PASS'])) {
+            $rows[] = ['MariaDB Root Password', $config['DB_ROOT_PASS']];
+        }
+
+        if (empty($rows)) {
+            return;
+        }
+
+        $this->newLine();
+        $this->components->info('Auto-generated passwords (high complexity):');
+        $this->table(['Key', 'Password'], $rows);
+        $this->newLine();
+    }
+
+    /**
+     * Save generated credentials via the CredentialsRepository.
+     *
+     * @return string Path to the saved credentials file
+     */
+    protected function saveCredentials(array $server, array $config): string
+    {
+        $serverSlug = $server['name'] ?? (string) $server['id'];
+
+        $credentials = [
+            'server' => $server['name'] ?? $server['id'],
+            'host' => $server['host'],
+            'saved_at' => date('Y-m-d H:i:s'),
+        ];
+
+        if (isset($config['NEW_USER'])) {
+            $credentials['deploy_user'] = $config['NEW_USER'];
+        }
+        if (isset($config['NEW_USER_PASSWORD'])) {
+            $credentials['deploy_user_password'] = $config['NEW_USER_PASSWORD'];
+        }
+        if (isset($config['DB_NAME'])) {
+            $credentials['db_name'] = $config['DB_NAME'];
+        }
+        if (isset($config['DB_USER'])) {
+            $credentials['db_user'] = $config['DB_USER'];
+        }
+        if (isset($config['DB_PASS'])) {
+            $credentials['db_password'] = $config['DB_PASS'];
+        }
+        if (isset($config['DB_ROOT_PASS'])) {
+            $credentials['db_root_password'] = $config['DB_ROOT_PASS'];
+        }
+
+        return $this->credentialsRepository->save($serverSlug, $credentials);
     }
 }
