@@ -35,7 +35,7 @@ class DatabaseRestartCommand extends Command
         passthru($sshCmd, $exitCode);
 
         if ($exitCode === 0) {
-            $this->components->success('Database restarted successfully.');
+            $this->info('Database restarted successfully.');
         }
 
         return $exitCode;

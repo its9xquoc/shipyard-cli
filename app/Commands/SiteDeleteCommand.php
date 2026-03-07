@@ -78,7 +78,7 @@ class SiteDeleteCommand extends Command
             $remainingSites = collect($sites)->reject(fn ($s) => $s['name'] === $appName)->values()->toArray();
             $this->repository->updateServer($server['id'], ['sites' => $remainingSites]);
 
-            $this->components->success("Site '{$appName}' removed from server config and system resources.");
+            $this->info("Site '{$appName}' removed from server config and system resources.");
 
             return self::SUCCESS;
         }

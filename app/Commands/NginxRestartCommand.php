@@ -35,7 +35,7 @@ class NginxRestartCommand extends Command
         passthru($sshCmd, $exitCode);
 
         if ($exitCode === 0) {
-            $this->components->success('Nginx restarted successfully.');
+            $this->info('Nginx restarted successfully.');
         }
 
         return $exitCode;

@@ -56,7 +56,7 @@ class ServerSwitchCommand extends Command
 
         $this->repository->setActiveServerId($server['id']);
 
-        $this->components->success("Active server switched to: '{$server['name']}'");
+        $this->info("Active server switched to: '{$server['name']}'");
 
         return self::SUCCESS;
     }

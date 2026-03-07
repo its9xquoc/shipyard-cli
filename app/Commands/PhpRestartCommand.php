@@ -36,7 +36,7 @@ class PhpRestartCommand extends Command
         passthru($sshCmd, $exitCode);
 
         if ($exitCode === 0) {
-            $this->components->success("PHP {$version}-FPM restarted successfully.");
+            $this->info("PHP {$version}-FPM restarted successfully.");
         }
 
         return $exitCode;

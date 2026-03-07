@@ -70,49 +70,49 @@ class SetupCommand extends Command
         $this->components->info("Starting modular setup on '{$server['name']}' ({$server['host']})...");
 
         // Pass the bundled script via stdin
-        // $process = proc_open($sshCommand, [
-        //     0 => ['pipe', 'r'], // stdin
-        //     1 => STDOUT,        // stdout
-        //     2 => STDERR,        // stderr
-        // ], $pipes);
+        $process = proc_open($sshCommand, [
+            0 => ['pipe', 'r'], // stdin
+            1 => STDOUT,        // stdout
+            2 => STDERR,        // stderr
+        ], $pipes);
 
-        // if (is_resource($process)) {
-        //     fwrite($pipes[0], $fullScript);
-        //     fclose($pipes[0]);
-        //     $exitCode = proc_close($process);
-        // } else {
-        //     $this->error('Failed to execute SSH process.');
+        if (is_resource($process)) {
+            fwrite($pipes[0], $fullScript);
+            fclose($pipes[0]);
+            $exitCode = proc_close($process);
+        } else {
+            $this->error('Failed to execute SSH process.');
 
-        //     return self::FAILURE;
-        // }
-
-        // if ($exitCode === 0) {
-        // Root-level server data is saved on server record.
-        $updatedData = $this->buildServerUpdatePayload($config);
-
-        // Site-level data is saved under server.sites, including site name "_".
-        $sitePayload = $this->buildSitePayload($config);
-        $updatedData['sites'] = $this->upsertSite($server['sites'] ?? [], $sitePayload);
-
-        if (!empty($updatedData)) {
-            $this->repository->updateServer($server['id'], $updatedData);
-            $this->components->info('Server configuration updated in storage.');
+            return self::FAILURE;
         }
 
-        $credentialsPath = $this->saveCredentials($server, $config);
+        if ($exitCode === 0) {
+            // Root-level server data is saved on server record.
+            $updatedData = $this->buildServerUpdatePayload($config);
+
+            // Site-level data is saved under server.sites, including site name "_".
+            $sitePayload = $this->buildSitePayload($config);
+            $updatedData['sites'] = $this->upsertSite($server['sites'] ?? [], $sitePayload);
+
+            if (!empty($updatedData)) {
+                $this->repository->updateServer($server['id'], $updatedData);
+                $this->components->info('Server configuration updated in storage.');
+            }
+
+            $credentialsPath = $this->saveCredentials($server, $config);
+
+            $this->newLine();
+            $this->info('Modular VPS Setup completed successfully!');
+            $this->components->info("Credentials saved to: {$credentialsPath}");
+            $this->newLine();
+
+            return self::SUCCESS;
+        }
 
         $this->newLine();
-        $this->info('Modular VPS Setup completed successfully!');
-        $this->components->info("Credentials saved to: {$credentialsPath}");
-        $this->newLine();
+        $this->components->error("Setup failed with exit code: {$exitCode}");
 
-        return self::SUCCESS;
-        // }
-
-        // $this->newLine();
-        // $this->components->error("Setup failed with exit code: {$exitCode}");
-
-        // return self::FAILURE;
+        return self::FAILURE;
     }
 
     /**

@@ -64,7 +64,7 @@ class DeployCommand extends Command
         passthru($sshCmd, $exitCode);
 
         if ($exitCode === 0) {
-            $this->components->success("Deployment completed successfully for '{$siteName}'.");
+            $this->info("Deployment completed successfully for '{$siteName}'.");
         } else {
             $this->components->error("Deployment failed with exit code {$exitCode}.");
         }

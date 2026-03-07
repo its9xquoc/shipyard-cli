@@ -96,7 +96,7 @@ class EnvPushCommand extends Command
         }
 
         if ($exitCode === 0) {
-            $this->components->success("Environment file pushed to: {$remotePath}");
+            $this->info("Environment file pushed to: {$remotePath}");
 
             return self::SUCCESS;
         }

@@ -55,7 +55,7 @@ class SSHConfigureCommand extends Command
         passthru($sshCmd, $exitCode);
 
         if ($exitCode === 0) {
-            $this->components->success('SSH key configured successfully.');
+            $this->info('SSH key configured successfully.');
         }
 
         return $exitCode;

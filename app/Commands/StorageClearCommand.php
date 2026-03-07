@@ -38,7 +38,7 @@ class StorageClearCommand extends Command
         }
 
         if (unlink($path)) {
-            $this->components->success('Shipyard storage cleared successfully.');
+            $this->info('Shipyard storage cleared successfully.');
 
             return self::SUCCESS;
         }

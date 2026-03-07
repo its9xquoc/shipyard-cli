@@ -73,7 +73,7 @@ class EnvPullCommand extends Command
 
         file_put_contents($localPath, $content);
 
-        $this->components->success("Environment file pulled to: {$localPath}");
+        $this->info("Environment file pulled to: {$localPath}");
 
         return self::SUCCESS;
     }

@@ -113,7 +113,7 @@ class SiteAddCommand extends Command
             ];
 
             $this->repository->updateServer($server['id'], ['sites' => $server['sites']]);
-            $this->components->success("Site '{$appName}' added successfully.");
+            $this->info("Site '{$appName}' added successfully.");
 
             return self::SUCCESS;
         }
