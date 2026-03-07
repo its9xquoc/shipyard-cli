@@ -55,11 +55,6 @@ return [
 
     'providers' => [
         App\Providers\AppServiceProvider::class,
-        App\Providers\ConfigServiceProvider::class,
-        App\Providers\ShipyardServiceProvider::class,
-        App\Providers\KeyServiceProvider::class,
-        App\Providers\RemoteServiceProvider::class,
-        App\Providers\TimeServiceProvider::class,
     ],
 
 ];

@@ -6,7 +6,9 @@ use App\Concerns\InteractsWithServers;
 use App\Services\ServerRepository;
 use Illuminate\Console\Command;
 
-class ServerListCommand extends Command
+use function Laravel\Prompts\confirm;
+
+class ServerDeleteCommand extends Command
 {
     use InteractsWithServers;
 
@@ -15,14 +17,14 @@ class ServerListCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'server:list';
+    protected $signature = 'server:delete';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'List all configured VPS servers';
+    protected $description = 'Delete a VPS server';
 
     /**
      * Create a new command instance.
@@ -38,23 +40,12 @@ class ServerListCommand extends Command
      */
     public function handle(): int
     {
-        $servers = $this->loadServers();
+        $server = $this->chooseServer();
 
-        if ($servers->isEmpty()) {
-            $this->info('No servers configured.');
-            return self::SUCCESS;
+        if (confirm("Are you sure you want to delete server '{$server['name']}'?")) {
+            $this->repository->deleteServer($server['id']);
+            $this->info('Server deleted successfully.');
         }
-
-        $this->table(
-            ['ID', 'Name', 'Host', 'Port', 'User'],
-            $servers->map(fn ($server) => [
-                $server['id'],
-                $server['name'],
-                $server['host'],
-                $server['port'],
-                $server['user'],
-            ])->toArray()
-        );
 
         return self::SUCCESS;
     }

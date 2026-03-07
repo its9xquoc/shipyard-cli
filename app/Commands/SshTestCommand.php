@@ -2,47 +2,55 @@
 
 namespace App\Commands;
 
-class SshTestCommand extends Command
+use App\Concerns\InteractsWithSSH;
+use App\Concerns\InteractsWithServers;
+use App\Services\SSHService;
+use App\Services\ServerRepository;
+use Illuminate\Console\Command;
+
+class SSHTestCommand extends Command
 {
-    /**
-     * The signature of the command.
-     *
-     * @var string
-     */
-    protected $signature = 'ssh:test
-        {server? : The server name}
-        {--key= : The path to the private key}';
+    use InteractsWithServers, InteractsWithSSH;
 
     /**
-     * The description of the command.
+     * The name and signature of the console command.
      *
      * @var string
      */
-    protected $description = 'Test the SSH key based secure authentication connection';
+    protected $signature = 'ssh:test';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Test SSH connection to a VPS server';
+
+    /**
+     * Create a new command instance.
+     */
+    public function __construct(
+        protected ServerRepository $repository,
+        protected SSHService $sshService
+    ) {
+        parent::__construct();
+    }
 
     /**
      * Execute the console command.
-     *
-     * @return void
      */
-    public function handle()
+    public function handle(): int
     {
-        if (! is_null($server = $this->argument('server'))) {
-            $this->call('server:switch', [
-                'server' => $server,
-            ]);
+        $server = $this->chooseServer();
+
+        $this->info("Testing connection to '{$server['name']}' ({$server['host']})...");
+
+        if ($this->testConnection($server)) {
+            $this->info('Connection successful: OK');
+        } else {
+            $this->error('Connection failed.');
         }
 
-        $this->step('Establishing secure connection');
-
-        if ($this->option('key')) {
-            $this->remote->resolvePrivateKeyUsing(function () {
-                return $this->option('key');
-            });
-        }
-
-        $this->remote->ensureSshIsConfigured();
-
-        $this->successfulStep('SSH key based secure authentication is configured');
+        return self::SUCCESS;
     }
 }

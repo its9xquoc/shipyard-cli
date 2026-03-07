@@ -1,0 +1,13 @@
+servers:
+  - id: 1
+    name: production
+    host: 192.168.1.10
+    port: 22
+    user: root
+    private_key: ~/.ssh/id_rsa
+  - id: 2
+    name: staging
+    host: 192.168.1.20
+    port: 22
+    user: deploy
+    private_key: ~/.ssh/deploy_key
