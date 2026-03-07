@@ -1,74 +1,68 @@
-# Shipyard CLI
+# 🛳️ Shipyard CLI
 
-A powerful command-line interface for managing your VPS servers and SSH connections, built on Laravel.
+**Shipyard CLI** is a premium, developer-centric command-line tool designed for **Senior DevOps and Laravel Engineers**. It provides a robust, modular, and isolated environment for managing VPS servers and deploying various types of web applications with ease.
 
-## Features
+Built on top of **Laravel Zero**, it brings the power of Artisan commands to server orchestration.
 
-- **Server Management**: Add, list, edit, and delete VPS server configurations.
-- **SSH Checks**: Instantly test SSH connectivity to your configured servers.
-- **Interactive Prompts**: A premium CLI experience using Laravel Prompts.
-- **YAML Storage**: All server data is securely stored in local YAML format.
+---
 
-## Installation
+## 🚀 Key Highlights
+
+- **Senior VPS Provisioning**: Transform fresh Ubuntu instances into hardened, optimized web servers in minutes.
+- **Isolated Application Hosting**: Each site gets its own PHP-FPM pool or PM2 process, ensuring maximum security and performance.
+- **Multi-Platform Support**: Expertly handle **Laravel**, **WordPress**, **Node.js/Next.js**, and **Static** applications.
+- **Smart Orchestration**: Remembers your active server to streamline repetitive tasks.
+- **Zero-Footprint Execution**: Commands are pushed via SSH piped scripts, leaving no temporary files on your production servers.
+
+---
+
+## 🛠️ Performance & Security
+
+- **Hardened SSH**: Custom ports, disabled root login, and enforced key-based authentication.
+- **Optimized Stack**: Pre-configured Nginx, PHP (8.1 - 8.4), MariaDB, Redis, and Fail2Ban.
+- **Modular Design**: Choose exactly which parts of the stack to install or update.
+
+---
+
+## 📦 Installation
 
 ```bash
-composer global require its9xquoc/shipyard-cli
-```
-
-Or clone the repository and run:
-
-```bash
+git clone https://github.com/its9xquoc/shipyard-cli.git
+cd shipyard-cli
 composer install
 ```
 
-## Usage
+Make sure you have a `storage/servers.yaml` file (automatically created on first run) to store your server configurations locally.
 
-The CLI provides several commands to manage your servers:
+---
 
-### List Servers
-Display all configured VPS servers in a clean table format.
-```bash
-php shipyard server:list
-```
+## 📖 Complete Documentation
 
-### Add a Server
-Interactively add a new VPS server configuration.
-```bash
-php shipyard server:add
-```
+The CLI is packed with features. For a detailed guide on every command, please refer to:
 
-### Edit a Server
-Update an existing server's details.
-```bash
-php shipyard server:edit
-```
+👉 **[USE_GUIDE.md](./USE_GUIDE.md)**
 
-### Delete a Server
-Remove a server configuration.
-```bash
-php shipyard server:delete
-```
+### Quick Commands Overview:
 
-### Test SSH Connection
-Test if the CLI can connect to the server using the provided credentials.
-```bash
-php shipyard ssh:test
-```
+| Category | Commands |
+| :--- | :--- |
+| **Server** | `setup`, `server:add`, `server:switch`, `server:current` |
+| **Sites** | `site:add`, `site:list`, `site:delete`, `site:logs` |
+| **Resources** | `nginx:restart`, `php:status`, `database:shell`, `daemon:list` |
+| **DevOps** | `deploy`, `tinker`, `ssh:configure`, `env:pull` |
 
-## Development
+---
 
-### Setup Pre-commit Hook
-To ensure code style consistency, run the setup script:
-```bash
-bash scripts/setup-recommit.sh
-```
+## 🤝 Contributing & Development
 
-### Linting
-Run Laravel Pint to format the code:
-```bash
-./vendor/bin/pint
-```
+We value clean code and consistency.
 
-## License
+- **Coding Style**: The project follows PSR-12/Laravel standards via **Laravel Pint**.
+- **Linting**: Run `./vendor/bin/pint` before committing.
+- **Modularity**: New scripts should be added to `scripts/setup/` or `scripts/sites/`.
 
-MIT License. Please see [LICENSE](LICENSE) for more information.
+---
+
+## 📄 License
+
+The Shipyard CLI is open-sourced software licensed under the [MIT license](LICENSE).

@@ -1,238 +1,182 @@
-> ## Documentation Index
->
-> Fetch the complete documentation index at: #index
-> Use this file to discover all available pages before exploring further.
+# Shipyard CLI Documentation
 
-# Shipyard CLI
+Shipyard CLI is a powerful command-line tool that allows you to manage your VPS servers, provision websites (Laravel, WordPress, Node.js), and control server resources.
 
-> Shipyard CLI is a command-line tool that you may use to manage your shipyard resources from the command-line.
+## Index
+- [Getting Started](#getting-started)
+- [Server Management](#server-management)
+- [VPS Provisioning (Setup)](#vps-provisioning-setup)
+- [Website Management](#website-management)
+- [Deployments](#deployments)
+- [Resource Control](#resource-control)
+- [SSH Utilities](#ssh-utilities)
 
-<CardGroup cols={2}>
-  <Card title="Shipyard CLI" icon="github" href="https://github.com/its9xquoc/shipyard-cli">
-    View the Shipyard CLI on GitHub
-  </Card>
+---
 
-  <Card title="Shipyard API" icon="code" href="#">
-    View the Shipyard API documentation
-  </Card>
-</CardGroup>
+## Getting Started
 
-## Introduction
-
-Shipyard provides a command-line tool that you may use to manage your shipyard servers, sites, and resources from the command-line.
-
-## Installation
-
-> **Requires [PHP 8.0+](https://php.net/releases/)**
-
-You may install the **[Shipyard CLI](https://github.com/its9xquoc/shipyard-cli)** as a global [Composer](https://getcomposer.org) dependency:
-
-```bash theme={null}
-composer global require its9xquoc/shipyard-cli
+### Installation
+Clone the repository and install dependencies:
+```bash
+git clone https://github.com/its9xquoc/shipyard-cli.git
+cd shipyard-cli
+composer install
 ```
 
-## Get started
+### Active Server Concept
+Shipyard CLI tracks your "active" server. Once switched, most commands will automatically target this server without prompting.
 
-To view a list of all available Shipyard CLI commands and view the current version of your installation, you may run the `shipyard` command from the command-line:
+---
 
-```bash theme={null}
-shipyard
+## Server Management
+
+### List Servers
+```bash
+php artisan server:list
 ```
 
-## Authenticating
-
-After you have generated an API token, you should authenticate with your Shipyard account using the login command:
-
-```bash theme={null}
-shipyard login
-shipyard login --token=your-api-token
+### Add a Server
+```bash
+php artisan server:add
 ```
 
-Alternatively, if you plan to authenticate with Shipyard from your CI platform, you may set a `shipyard_API_TOKEN` environment variable in your CI build environment.
-
-## Current server & switching servers
-
-When managing Shipyard servers, sites, and resources via the CLI, you will need to be aware of your currently active server. You may view your current server using the `server:current` command. Typically, most of the commands you execute using the shipyard CLI will be executed against the active server.
-
-```bash theme={null}
-shipyard server:current
+### Switch/Active Server
+View the current active server:
+```bash
+php artisan server:current
 ```
 
-Of course, you may switch your active server at any time. To change your active server, use the `server:switch` command:
-
-```bash theme={null}
-shipyard server:switch
-shipyard server:switch staging
+Switch to another server:
+```bash
+php artisan server:switch
+# or
+php artisan server:switch server-name
 ```
 
-To view a list of all available servers, you may use the `server:list` command:
+---
 
-```bash theme={null}
-shipyard server:list
+## VPS Provisioning (Setup)
+
+The `setup` command transforms a fresh Ubuntu server into a fully-functional web server.
+
+```bash
+php artisan setup
 ```
 
-## SSH key authentication
+**Available Steps:**
+- System Updates & Optimization
+- User Creation & SSH Hardening
+- Firewall (UFW) & Fail2Ban
+- Nginx, PHP-FPM, MariaDB, Redis, Node.js installation
+- Automatic configuration of security and performance tuning
 
-Before performing any tasks using the Shipyard CLI, you should ensure that you have added an SSH key for the `shipyard` user to your servers so that you can securely connect to them. You may have already done this via the shipyard UI. You may test that SSH is configured correctly by running the `ssh:test` command:
+---
 
-```bash theme={null}
-shipyard ssh:test
+## Website Management
+
+### Adding a Site
+Supports **Laravel**, **WordPress**, **Node.js/Next.js**, and **Static** sites. Each site is isolated using separate PHP-FPM pools or PM2 processes.
+
+```bash
+php artisan site:add
 ```
 
-To configure SSH key authentication, you may use the `ssh:configure` command. The `ssh:configure` command accepts a `--key` option which instructs the CLI which public key to add to the server. In addition, you may provide a `--name` option to specify the name that should be assigned to the key:
-
-```bash theme={null}
-shipyard ssh:configure
-
-shipyard ssh:configure --key=/path/to/public/key.pub --name=sallys-macbook
+### Listing Sites
+Lists all websites on the active (or selected) server.
+```bash
+php artisan site:list
 ```
 
-After you have configured SSH key authentication, you may use the `ssh` command to create a secure connection to your server:
-
-```bash theme={null}
-shipyard ssh
-
-shipyard ssh server-name
+### Deleting a Site
+Removes Nginx configs, PHP pools, and PM2 processes while keeping data/databases safe.
+```bash
+php artisan site:delete
 ```
 
-## Sites
-
-To view the list of all available sites, you may use the `site:list` command:
-
-```bash theme={null}
-shipyard site:list
+### Site Logs
+View application or web server logs:
+```bash
+php artisan site:logs
+php artisan site:logs --follow
 ```
 
-### Initiating deployments
+---
 
-One of the primary features of Shipyard is deployments. Deployments may be initiated via the shipyard CLI using the `deploy` command:
+## Deployments
 
-```bash theme={null}
-shipyard deploy
-
-shipyard deploy example.com
+### Initiate Deployment
+Runs the `deploy.sh` script located in the site's root directory.
+```bash
+php artisan deploy
 ```
 
-### Updating environment variables
-
-You may update a site's environment variables using the `env:pull` and `env:push` commands. The `env:pull` command may be used to pull down an environment file for a given site:
-
-```bash theme={null}
-shipyard env:pull
-shipyard env:pull pestphp.com
-shipyard env:pull pestphp.com .env
+### Review Deployment Logs
+```bash
+php artisan deploy:logs
 ```
 
-Once this command has been executed, the site's environment file will be placed in your current directory. To update the site's environment variables, open and edit this file. When you are done editing the variables, use the `env:push` command to push the variables back to your site:
+---
 
-```bash theme={null}
-shipyard env:push
-shipyard env:push pestphp.com
-shipyard env:push pestphp.com .env
+## Resource Control
+
+Manage server services directly from the CLI.
+
+### Nginx
+```bash
+php artisan nginx:status
+php artisan nginx:restart
+php artisan nginx:logs
 ```
 
-If your site is utilizing Laravel's "configuration caching" feature or has queue workers, the new variables will not be used until the site is deployed again.
-
-### Viewing application logs
-
-You may also view a site's logs directly from the command-line. To do so, use the `site:logs` command:
-
-```bash theme={null}
-shipyard site:logs
-shipyard site:logs --follow              # View logs in realtime
-
-shipyard site:logs example.com
-shipyard site:logs example.com --follow  # View logs in realtime
+### PHP-FPM
+```bash
+php artisan php:status
+php artisan php:restart
+php artisan php:logs
 ```
 
-### Reviewing deployment output / logs
-
-When a deployment fails, you may review the output / logs via the Shipyard UI's deployment history screen. You may also review the output at any time on the command-line using the `deploy:logs` command. If the `deploy:logs` command is called with no additional arguments, the logs for the latest deployment will be displayed. Or, you may pass the deployment ID to the `deploy:logs` command to display the logs for a particular deployment:
-
-```
-shipyard deploy:logs
-
-shipyard deploy:logs 12345
+### Database (MariaDB/MySQL)
+```bash
+php artisan database:status
+php artisan database:restart
+php artisan database:shell
 ```
 
-### Running commands
-
-Sometimes you may wish to run an arbitrary shell command against a site. The `command` command will prompt you for the command you would like to run. The command will be run relative to the site's root directory.
-
-```
-shipyard command
-
-shipyard command example.com
-
-shipyard command example.com --command="php artisan inspire"
+### Daemons (PM2)
+```bash
+php artisan daemon:status
+php artisan daemon:restart
+php artisan daemon:logs
 ```
 
-### Tinker
+---
 
-As you may know, all Laravel applications include "Tinker" by default. To enter a Tinker environment on a remote server using the Shipyard CLI, run the `tinker` command:
+## SSH Utilities
 
-```
-shipyard tinker
-
-shipyard tinker example.com
-```
-
-## Resources
-
-Shipyard provisions servers with a variety of resources and additional software, such as Nginx, MySQL, etc. You may use the shipyard CLI to perform common actions on those resources.
-
-### Checking resource status
-
-To check the current status of a resource, you may use the `{resource}:status` command:
-
-```bash theme={null}
-shipyard daemon:status
-shipyard database:status
-
-shipyard nginx:status
-
-shipyard php:status      # View PHP status (default PHP version)
-shipyard php:status 8.5  # View PHP 8.5 status
+### Interactive Shell
+Open a standard SSH session to the active server:
+```bash
+php artisan ssh
 ```
 
-### Viewing resources logs
-
-You may also view logs directly from the command-line. To do so, use the `{resource}:logs` command:
-
-```bash theme={null}
-shipyard daemon:logs
-shipyard daemon:logs --follow  # View logs in realtime
-
-shipyard database:logs
-
-shipyard nginx:logs         # View error logs
-shipyard nginx:logs access  # View access logs
-
-shipyard php:logs           # View PHP logs (default PHP version)
-shipyard php:logs 8.5       # View PHP 8.5 logs
+### Test Connection
+```bash
+php artisan ssh:test
 ```
 
-### Restarting resources
-
-Resources may be restarted using the `{resource}:restart` command:
-
-```bash theme={null}
-shipyard daemon:restart
-
-shipyard database:restart
-
-shipyard nginx:restart
-
-shipyard php:restart      # Restarts PHP (default PHP version)
-shipyard php:restart 8.5  # Restarts PHP 8.5
+### Configure SSH Keys
+Automatically adds your local public key to the remote server's `authorized_keys`.
+```bash
+php artisan ssh:configure --key=~/.ssh/id_rsa.pub
 ```
 
-### Connecting to resources locally
+### Run Arbitrary Commands
+Execute a command in the root or a specific site directory:
+```bash
+php artisan command --command="php artisan inspire"
+```
 
-You may use the `{resource}:shell` command to quickly access a command line shell that lets you interact with a given resource:
-
-```bash theme={null}
-shipyard database:shell
-shipyard database:shell my-database-name
-shipyard database:shell my-database-name --user=my-user
+### Remote Tinker (Laravel only)
+```bash
+php artisan tinker
 ```
